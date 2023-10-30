@@ -1,0 +1,42 @@
+##Original manuscript: Single cell transcriptomic and proteomic signatures of paradoxical eczema in psoriasis patients treated with biologics
+##Code author: A. Al-Janabi
+##Command/programming language: Bash
+
+#Create index for vcf files (post-imputation)
+bcftools index -t -f --threads 12 Case1.vcf.gz Case2.vcf.gz Case3.vcf.gz Control1.vcf.gz Control2.vcf.gz Control3.vcf.gz
+
+#Combined vcf files
+bcftools merge -f PASS --output /user-directory/multisample.vcf.gz --threads 12  --output-type z Case1.vcf.gz Case2.vcf.gz Case3.vcf.gz Control1.vcf.gz Control2.vcf.gz Control3.vcf.gz
+
+#Exclude variants that don't have alternative allele genotypes
+bcftools view --threads 20 -i GT[*]="alt" -O z -o multisample.non_ref.vcf.gz multisample.vcf.gz
+
+#Exclude variants with missing data for any donors
+bcftools filter -e 'F_MISSING' > 0.01 -O z -o multisample_non_ref_nomissing.vcf.gz multisample.non_ref.vcf.gz
+
+
+#Commands for demultiplexing by genetic variation using demuxlet
+echo "Initialising..."
+module load /apps/anaconda3/2019.07 
+module load /modulefiles/popscle/0.1beta
+conda activate /file_path
+
+ANALYSIS_DIR=/analysis_directory
+PATH_TO_GENOTYPE_VCF=/vcf_directory/multisample.non_ref.no_missing.vcf.gz
+
+mkdir -p $ANALYSIS_DIR/data/raw/popscle/pileup
+mkdir -p $ANALYSIS_DIR/data/raw/popscle/demuxlet
+
+SAMPLE_IDS=( AA1 AA2 )
+for SAMPLE_ID in "${SAMPLE_IDS[@]}"; do
+
+PILEUP_ID=`qsub -b y -cwd -V -shell n -pe smp.pe 3 -l mem256 -j y -N ${SAMPLE_ID}.pileup -terse /mnt/jw01-aruk-home01/projects/single_cell/common_files/scripts/popscle/filter_bam_and_pileup \
+--vcf $ANALYSIS_DIR/data/external/1000genomes/1000G.phase3.MAF1e2.genes.hg38.vcf.gz \
+--sam $ANALYSIS_DIR/data/raw/cellranger-arc/$SAMPLE_ID/outs/possorted_bam.bam \
+--cells $ANALYSIS_DIR/data/raw/cellranger-arc/$SAMPLE_ID/outs/filtered_feature_bc_matrix/barcodes.tsv.gz \
+--id $SAMPLE_ID --output-dir $ANALYSIS_DIR/data/raw/popscle/pileup -t 3`
+
+DEMUX_ID=`qsub -b y -cwd -V -j y -pe smp.pe 2 -l mem256 -N ${SAMPLE_ID}.demuxlet -hold_jid ${PILEUP_ID} -terse popscle demuxlet --plp $ANALYSIS_DIR/data/raw/popscle/pileup/${SAMPLE_ID} \
+--vcf $PATH_TO_GENOTYPE_VCF --field GT \
+--out $ANALYSIS_DIR/data/raw/popscle/demuxlet/${SAMPLE_ID}`
+done
