@@ -1,4 +1,4 @@
-##Original manuscript: Single cell transcriptomic and proteomic signatures of paradoxical eczema in psoriasis patients treated with biologics
+##Original manuscript: Blood single cell transcriptomic and proteomic signatures of paradoxical eczema in psoriasis patients treated with biologics
 ##Code author: A. Al-Janabi
 ##Command/programming language: Bash
 
