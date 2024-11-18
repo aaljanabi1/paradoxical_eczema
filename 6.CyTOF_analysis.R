@@ -161,6 +161,7 @@ sce_stim <- mergeClusters(sce_stim, k = "meta60", table = merging_stim1, id = "m
 sce_stim <- mergeClusters(sce_stim, k = "meta60", table = merging_stim2, id = "merging2")
 
 #Remove excluded clusters
+sce_unstim <- filterSCE(sce_unstim, k="meta60", cluster_id != 7)
 sce_stim <- filterSCE(sce_stim, k="meta60", cluster_id != 50)
 sce_unstim_Th <- filterSCE(sce_unstim, k="merging2", cluster_id %in% c("Th1", "Th2", "Th17", "Tc1", "Tc2", "Tc17"))
 sce_stim_Th <- filterSCE(sce_stim, k="merging2", cluster_id %in% c("Th17", "Th1_Th17"))
@@ -359,3 +360,10 @@ case_control_heatmap <- plotDiffHeatmap(sce_cases_controls, DS_tables_list[["uns
 case_healthy_heatmap <- plotDiffHeatmap(sce_cases_healthy, DS_tables_list[["unstim_2"]], all = FALSE, fdr = 0.1, lfc = 0, col_anno = "condition", sort_by = "lfc", top_n=100)
 control_healthy_heatmap <- plotDiffHeatmap(sce_controls_healthy, DS_tables_list[["unstim_3"]], all = FALSE, fdr = 0.1, lfc = 0, col_anno = "condition", sort_by = "lfc", top_n=100)
 stim_control_healthy_heatmap <- plotDiffHeatmap(sce_stim_controls_healthy, DS_tables_list[["stim_3"]], all = FALSE, fdr = 0.1, lfc = 0, col_anno = "condition", sort_by = "lfc", top_n=100)
+
+#tSNE plots coloured by my annotated clusters
+png("unstim_tSNEs_annotations.png", width=2000, height=2000, res=300); plotDR(sce_unstim, dr="TSNE", color_by = "merging1") + theme(legend.title=element_blank()); dev.off()
+png("stim_tSNEs_annotations.png", width=2000, height=2000, res=300); plotDR(sce_stim, dr="TSNE", color_by = "merging1") + theme(legend.title=element_blank()); dev.off()
+
+#TNF expression in each group
+png("TNF_by_group.png", width=2000, height=2000, res=300); plotDR(sce_unstim, dr="TSNE", color_by = "TNFa",  facet_by = "condition"); dev.off()
