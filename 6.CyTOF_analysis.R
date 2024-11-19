@@ -163,137 +163,134 @@ sce_stim <- mergeClusters(sce_stim, k = "meta60", table = merging_stim2, id = "m
 #Remove excluded clusters
 sce_unstim <- filterSCE(sce_unstim, k="meta60", cluster_id != 7)
 sce_stim <- filterSCE(sce_stim, k="meta60", cluster_id != 50)
-sce_unstim_Th <- filterSCE(sce_unstim, k="merging2", cluster_id %in% c("Th1", "Th2", "Th17", "Tc1", "Tc2", "Tc17"))
-sce_stim_Th <- filterSCE(sce_stim, k="merging2", cluster_id %in% c("Th17", "Th1_Th17"))
 
-## Differential abundance and differential states using diffcyt-----------------
+
+## Differential abundance and differential states using diffcyt-------------------------------------------------------
 
 #Create design and contrast matrix
 #Note: the design matrix includes group 1 (case non-stim) as an intercept. Therefore contrasts including this group code this group as 0.
 design_unstim <- createDesignMatrix(ei(sce_unstim), cols_design = "condition")
 design_stim <- createDesignMatrix(ei(sce_stim), cols_design = "condition")
-design_unstim_Th <- createDesignMatrix(ei(sce_unstim_Th), cols_design = "condition")
-design_stim_Th <- createDesignMatrix(ei(sce_stim_Th), cols_design = "condition")
 
-contrast_unstim_1 <- createContrast(c(0, -1, 0))	#Case unstim vs control unstim - control is reference
-contrast_unstim_2 <- createContrast(c(0, 0, -1))	#Case unstim vs healthy unstim - healthy is reference
-contrast_unstim_3 <- createContrast(c(0, 1, -1))	#Control unstim vs healthy unstim - healthy is reference
-contrast_stim_1 <- createContrast(c(0, -1, 0))		#Case stim vs control stim - control is reference
-contrast_stim_2 <- createContrast(c(0, 0, -1))		#Case stim vs healthy stim - healthy is reference
-contrast_stim_3 <- createContrast(c(0, 1, -1))		#Control stim vs healthy stim - healthy is reference
+
+contrast_1 <- createContrast(c(0, -1, 0))	#Case vs control - control is reference
+contrast_2 <- createContrast(c(0, 0, -1))	#Case vs healthy - healthy is reference
+contrast_3 <- createContrast(c(0, 1, -1))	#Control vs healthy - healthy is reference
+
 
 #Differential abundance - note: function automatically adjusts for number of cells inputted per donor. The "normalize" function additionally adjusts for compositional differences which can create false positives in non-differentially abundant populations. See paper: https://www.nature.com/articles/s42003-019-0415-5
 #Note: transform set to FALSE - already arcsinh transformed during CATALYST's "prepData" step.
 
 unstim_res_DA_1 <- diffcyt(sce_unstim,
-                           analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
-                           design = design_unstim, contrast = contrast_unstim_1, verbose = FALSE, transform = FALSE)
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
+    design = design_unstim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 
 unstim_res_DA_2 <- diffcyt(sce_unstim,
-                           analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
-                           design = design_unstim, contrast = contrast_unstim_2, verbose = FALSE, transform = FALSE)
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
+    design = design_unstim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 
 unstim_res_DA_3 <- diffcyt(sce_unstim,
-                           analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
-                           design = design_unstim, contrast = contrast_unstim_3, verbose = FALSE, transform = FALSE)
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
+    design = design_unstim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 
 stim_res_DA_1 <- diffcyt(sce_stim,
-                         analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
-                         design = design_stim, contrast = contrast_stim_1, verbose = FALSE, transform = FALSE)
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
+    design = design_stim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 
 stim_res_DA_2 <- diffcyt(sce_stim,
-                         analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
-                         design = design_stim, contrast = contrast_stim_2, verbose = FALSE, transform = FALSE)
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
+    design = design_stim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 
 stim_res_DA_3 <- diffcyt(sce_stim,
-                         analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
-                         design = design_stim, contrast = contrast_stim_3, verbose = FALSE, transform = FALSE)
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging1",
+    design = design_stim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 
 
 #Repeat but for merging2 (Tc and Th subtypes)
 
-unstim_Th_res_DA_1 <- diffcyt(sce_unstim_Th,
-                              analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
-                              design = design_unstim_Th, contrast = contrast_unstim_1, verbose = FALSE, transform = FALSE)
+unstim_Th_res_DA_1 <- diffcyt(sce_unstim,
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
+    design = design_unstim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 
-unstim_Th_res_DA_2 <- diffcyt(sce_unstim_Th,
-                              analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
-                              design = design_unstim_Th, contrast = contrast_unstim_2, verbose = FALSE, transform = FALSE)
+unstim_Th_res_DA_2 <- diffcyt(sce_unstim,
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
+    design = design_unstim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 
-unstim_Th_res_DA_3 <- diffcyt(sce_unstim_Th,
-                              analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
-                              design = design_unstim_Th, contrast = contrast_unstim_3, verbose = FALSE, transform = FALSE)
+unstim_Th_res_DA_3 <- diffcyt(sce_unstim,
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
+    design = design_unstim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 
-stim_Th_res_DA_1 <- diffcyt(sce_stim_Th,
-                            analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
-                            design = design_stim_Th, contrast = contrast_stim_1, verbose = FALSE, transform = FALSE)
+stim_Th_res_DA_1 <- diffcyt(sce_stim,
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
+    design = design_stim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 
-stim_Th_res_DA_2 <- diffcyt(sce_stim_Th,
-                            analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
-                            design = design_stim_Th, contrast = contrast_stim_2, verbose = FALSE, transform = FALSE)
+stim_Th_res_DA_2 <- diffcyt(sce_stim,
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
+    design = design_stim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 
-stim_Th_res_DA_3 <- diffcyt(sce_stim_Th,
-                            analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
-                            design = design_stim_Th, contrast = contrast_stim_3, verbose = FALSE, transform = FALSE)
+stim_Th_res_DA_3 <- diffcyt(sce_stim,
+    analysis_type = "DA", method_DA = "diffcyt-DA-edgeR", clustering_to_use = "merging2",
+    design = design_stim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 
 
 #Differential states
 unstim_res_DS_1 <- diffcyt(sce_unstim, clustering_to_use = "merging1",
-                           analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                           design = design_unstim, contrast = contrast_unstim_1, verbose = FALSE, transform = FALSE)
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_unstim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 
 unstim_res_DS_2 <- diffcyt(sce_unstim, clustering_to_use = "merging1",
-                           analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                           design = design_unstim, contrast = contrast_unstim_2, verbose = FALSE, transform = FALSE)
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_unstim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 
 unstim_res_DS_3 <- diffcyt(sce_unstim, clustering_to_use = "merging1",
-                           analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                           design = design_unstim, contrast = contrast_unstim_3, verbose = FALSE, transform = FALSE)
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_unstim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 
 stim_res_DS_1 <- diffcyt(sce_stim, clustering_to_use = "merging1",
-                         analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                         design = design_stim, contrast = contrast_stim_1, verbose = FALSE, transform = FALSE)
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_stim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 
 stim_res_DS_2 <- diffcyt(sce_stim, clustering_to_use = "merging1",
-                         analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                         design = design_stim, contrast = contrast_stim_2, verbose = FALSE, transform = FALSE)
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_stim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 
 stim_res_DS_3 <- diffcyt(sce_stim, clustering_to_use = "merging1",
-                         analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                         design = design_stim, contrast = contrast_stim_3, verbose = FALSE, transform = FALSE)
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_stim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 
 
 #Repeat but for merging2 (Tc and Th subtypes)
 #Differential states
-unstim_Th_res_DS_1 <- diffcyt(sce_unstim_Th, clustering_to_use = "merging2",
-                              analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                              design = design_unstim_Th, contrast = contrast_unstim_1, verbose = FALSE, transform = FALSE)
+unstim_Th_res_DS_1 <- diffcyt(sce_unstim, clustering_to_use = "merging2",
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_unstim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 unstim_Th_tbl_DS_1 <- rowData(unstim_Th_res_DS_1$res)
 
-unstim_Th_res_DS_2 <- diffcyt(sce_unstim_Th, clustering_to_use = "merging2",
-                              analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                              design = design_unstim_Th, contrast = contrast_unstim_2, verbose = FALSE, transform = FALSE)
+unstim_Th_res_DS_2 <- diffcyt(sce_unstim, clustering_to_use = "merging2",
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_unstim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 unstim_Th_tbl_DS_2 <- rowData(unstim_Th_res_DS_2$res)
 
-unstim_Th_res_DS_3 <- diffcyt(sce_unstim_Th, clustering_to_use = "merging2",
-                              analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                              design = design_unstim_Th, contrast = contrast_unstim_3, verbose = FALSE, transform = FALSE)
+unstim_Th_res_DS_3 <- diffcyt(sce_unstim, clustering_to_use = "merging2",
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_unstim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 unstim_Th_tbl_DS_3 <- rowData(unstim_Th_res_DS_3$res)
 
-stim_Th_res_DS_1 <- diffcyt(sce_stim_Th, clustering_to_use = "merging2",
-                            analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                            design = design_stim_Th, contrast = contrast_stim_1, verbose = FALSE, transform = FALSE)
+stim_Th_res_DS_1 <- diffcyt(sce_stim, clustering_to_use = "merging2",
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_stim, contrast = contrast_1, verbose = FALSE, transform = FALSE)
 stim_Th_tbl_DS_1 <- rowData(stim_Th_res_DS_1$res)
 
-stim_Th_res_DS_2 <- diffcyt(sce_stim_Th, clustering_to_use = "merging2",
-                            analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                            design = design_stim_Th, contrast = contrast_stim_2, verbose = FALSE, transform = FALSE)
+stim_Th_res_DS_2 <- diffcyt(sce_stim, clustering_to_use = "merging2",
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_stim, contrast = contrast_2, verbose = FALSE, transform = FALSE)
 stim_Th_tbl_DS_2 <- rowData(stim_Th_res_DS_2$res)
 
-stim_Th_res_DS_3 <- diffcyt(sce_stim_Th, clustering_to_use = "merging2",
-                            analysis_type = "DS", method_DS = "diffcyt-DS-limma",
-                            design = design_stim_Th, contrast = contrast_stim_3, verbose = FALSE, transform = FALSE)
+stim_Th_res_DS_3 <- diffcyt(sce_stim, clustering_to_use = "merging2",
+    analysis_type = "DS", method_DS = "diffcyt-DS-limma",
+    design = design_stim, contrast = contrast_3, verbose = FALSE, transform = FALSE)
 stim_Th_tbl_DS_3 <- rowData(stim_Th_res_DS_3$res)
+
 
 #Put all results into lists, save and export to Excel
 DA_results_list <- list(unstim_res_DA_1, unstim_res_DA_2, unstim_res_DA_3, stim_res_DA_1, stim_res_DA_2, stim_res_DA_3, unstim_Th_res_DA_1, unstim_Th_res_DA_2, unstim_Th_res_DA_3, stim_Th_res_DA_1, stim_Th_res_DA_2, stim_Th_res_DA_3)
@@ -326,11 +323,12 @@ for(i in results_names){
 
 
 #Output all and significant results into Excel docs (multiple tabs in each)
-setwd("/user/differential_results")
+setwd("X:/Part 4/CyTOF/R/differential_results")
 write.xlsx(sig_DA_results, "sig_DA_results.xlsx")
 write.xlsx(sig_DS_results, "sig_DS_results.xlsx")
 write.xlsx(all_DA_results, "all_DA_results.xlsx")
 write.xlsx(all_DS_results, "all_DS_results.xlsx")
+
 
 #Prep data for displaying results in heatmaps
 sce_unstim$sample_id <- factor(sce_unstim$sample_id, levels = c("Patient1_non-stim", "Patient2_non-stim", "Patient3_non-stim", "Patient4_non-stim", "Patient5_non-stim", "Patient6_non-stim", "Patient7_non-stim", "Patient8_non-stim", "Patient9_non-stim", "Patient10_non-stim", "Patient11_non-stim", "Patient12_non-stim", "Patient13_non-stim", "Patient14_non-stim")) #Reorder factor levels, otherwise puts patients 10, 11 etc straight after patient 1
