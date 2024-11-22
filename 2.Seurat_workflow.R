@@ -155,21 +155,21 @@ batch2_filtered <- subset(x = batch2_filtered, subset = clusters_raw == 23, inve
 batch1_filtered <- subset(batch1_filtered, subset = DROPLET.FINAL == "DBL", invert=TRUE)
 batch1_filtered <- subset(batch1_filtered, subset = DROPLET.FINAL == "AMB", invert=TRUE)
 batch1_filtered <- subset(batch1_filtered, subset = nFeature_RNA > 1000 & nFeature_RNA < 5000)
-batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 7 & CELL.ID == "AP01B2-D", invert=TRUE)
-batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 9 & CELL.ID == "AP02B2-D", invert=TRUE)
-batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 10 & CELL.ID == "AP03B2-D", invert=TRUE)
-batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 10 & CELL.ID == "AP05B3-D", invert=TRUE)
-batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 10 & CELL.ID == "AP06B3-D", invert=TRUE)
-batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 9 & CELL.ID == "AP08B3-D", invert=TRUE)
+batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 7 & CELL.ID == "Case1", invert=TRUE)
+batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 9 & CELL.ID == "Case2", invert=TRUE)
+batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 10 & CELL.ID == "Case1", invert=TRUE)
+batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 10 & CELL.ID == "Control1", invert=TRUE)
+batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 10 & CELL.ID == "Control2", invert=TRUE)
+batch1_filtered <- subset(batch1_filtered, subset = percent.mt > 9 & CELL.ID == "Control3", invert=TRUE)
 batch2_filtered <- subset(batch2_filtered, subset = DROPLET.FINAL == "DBL", invert=TRUE)
 batch2_filtered <- subset(batch2_filtered, subset = DROPLET.FINAL == "AMB", invert=TRUE)
 batch2_filtered <- subset(batch2_filtered, subset = nFeature_RNA > 1000 & nFeature_RNA < 5000)
-batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 7 & CELL.ID == "AP01B2-D", invert=TRUE)
-batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 9 & CELL.ID == "AP02B2-D", invert=TRUE)
-batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 10 & CELL.ID == "AP03B2-D", invert=TRUE)
-batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 10 & CELL.ID == "AP05B3-D", invert=TRUE)
-batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 10 & CELL.ID == "AP06B3-D", invert=TRUE)
-batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 9 & CELL.ID == "AP08B3-D", invert=TRUE)
+batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 7 & CELL.ID == "Case1", invert=TRUE)
+batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 9 & CELL.ID == "Case2", invert=TRUE)
+batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 10 & CELL.ID == "Case3", invert=TRUE)
+batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 10 & CELL.ID == "Control1", invert=TRUE)
+batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 10 & CELL.ID == "Control2", invert=TRUE)
+batch2_filtered <- subset(batch2_filtered, subset = percent.mt > 9 & CELL.ID == "Control3", invert=TRUE)
 
 #Merge Seurat objects
 seurat_object <- merge(batch1_filtered, y = batch2_filtered, add.cell.ids = c("batch1", "batch2"), project = "AA_combined")
@@ -258,12 +258,12 @@ anchors_list <- list()
 for(i in subcluster_cell_types){
   seurat_list[[i]] <- subset(seurat_object, idents = i)
   sample.list[[i]] <- SplitObject(seurat_list[[i]], split.by = "CELL.ID")
-  case1_list[[i]] <- sample.list[[i]][["AP01B2-D"]]
-  case2_list[[i]] <- sample.list[[i]][["AP02B2-D"]]
-  case3_list[[i]] <- sample.list[[i]][["AP03B2-D"]]
-  control1_list[[i]] <- sample.list[[i]][["AP05B3-D"]]
-  control2_list[[i]] <- sample.list[[i]][["AP06B3-D"]]
-  control3_list[[i]] <- sample.list[[i]][["AP08B3-D"]]
+  case1_list[[i]] <- sample.list[[i]][["case1"]]
+  case2_list[[i]] <- sample.list[[i]][["case2"]]
+  case3_list[[i]] <- sample.list[[i]][["case3"]]
+  control1_list[[i]] <- sample.list[[i]][["control1"]]
+  control2_list[[i]] <- sample.list[[i]][["control2"]]
+  control3_list[[i]] <- sample.list[[i]][["control3"]]
   case1_list[[i]] <- SCTransform(case1_list[[i]], vst.flavor = "v2", verbose = FALSE)
   case2_list[[i]] <- SCTransform(case2_list[[i]], vst.flavor = "v2", verbose = FALSE)
   case3_list[[i]] <- SCTransform(case3_list[[i]], vst.flavor = "v2", verbose = FALSE)
