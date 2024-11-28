@@ -19,7 +19,7 @@ library(xlsx)
 library(lme4)
 library(celldex)
 library(SingleR)
-
+library(presto)
 
 #Set working directory:
 setwd("/user/directory")
@@ -213,18 +213,6 @@ mapping.anchors <- FindTransferAnchors(reference = reference, query = seurat_obj
 seurat_object <- MapQuery(anchorset = mapping.anchors, query = seurat_object, reference = reference, refdata = list(celltype.l1 = "celltype.l1", celltype.l2 = "celltype.l2", predicted_ADT = "ADT"), reference.reduction = "spca", reduction.model = "wnn.umap")
 markers_list <- list()
 
-for(i in cell_types){
-   markers_list[[i]] <- FindMarkers(seurat_object, ident.1 = i, only.pos = TRUE, logfc.threshold = 0.1)
-   }
-
-#Extract top 5 markers for each cell type from the above list (ordered by p-value)
-top5_markers_list <- list()
-for(i in cell_types){
-    top5_markers_list[[i]] <- head(markers_list[[i]], n=5)
-}
-
-top5_markers_list <- lapply(top5_markers_list, function (x) rownames_to_column (x, var="gene"))
-write.xlsx(top5_markers_list, "top5_markers_list.xlsx")
 
 
 ## Clustering method 2 for Th subsets - SingleR--------------------------
@@ -281,21 +269,6 @@ for(i in subcluster_cell_types){
   seurat_list[[i]] <- FindClusters(object = seurat_list[[i]], verbose = FALSE)
 }
 
-#Find sub-cluster markers
-subcluster_markers_list <- list()
-subcluster_marker_tables_list <- list()
-top5_subcluster_markers_list <- list()
-
-for(i in subcluster_cell_types){
-  Idents(seurat_list[[i]]) <- 'seurat_clusters'
-  subcluster_markers_list[[i]] <- FindAllMarkers(seurat_list[[i]], only.pos = TRUE, logfc.threshold = 0.1)
-  subcluster_marker_tables_list[[i]] <- function(x){ subcluster_markers_list[[i]][subcluster_markers_list[[i]][["cluster"]] == x, ] %>%
-  head(n=5)}
-  top5_subcluster_markers_list[[i]] <- map_dfr(0:21, subcluster_marker_tables_list[[i]])
-}
-
-write.xlsx(top5_subcluster_markers_list, "top5_subcluster_markers_list.xlsx")
-
 #Manually assigned sub-clusters based on expression of canonical markers (visualised in violin plots).
 
 #Allocate new cluster identities to Seurat object
@@ -307,6 +280,55 @@ seurat_list[["CD8_T"]] <- RenameIdents(seurat_list[["CD8_T"]], new.CD8.ids)
 new.Mono.ids <- c("CD14 Mono 1", "CD14 Mono 2", "CD14 Mono 3", "CD16 Mono 1", "CD14 Mono 4", "CD14 Mono 5", "CD16 Mono 2", "CD14 Mono 6", "CD14 Mono 7", "CD14 Mono 8", "CD14 Mono 9", "CD16 Mono 3", "CD14 Mono 10")
 names(new.Mono.ids) <- levels(seurat_list[["Mono"]])
 seurat_list[["Mono"]] <- RenameIdents(seurat_list[["Mono"]], new.Mono.ids)
+
+
+##Identify and save cluster markers for all clusters and sub-clusters
+
+#Broad clusters
+Idents(seurat_object) <- 'predicted.celltype.l1'
+broad_cluster_markers_all <- FindAllMarkers(seurat_object, assay = "SCT", only.pos = TRUE)
+broad_cluster_markers <- broad_cluster_markers_all %>% group_by(cluster) %>% dplyr::filter(pct.1 > 0.25) %>% dplyr::slice (1:6) %>% ungroup()
+broad_cluster_markers <- broad_cluster_markers[order(as.character(broad_cluster_markers$cluster)),c(6,7,2,3,4,1,5)] 
+
+#Th subtypes
+Idents(seurat_object) <- 'monaco_labels'
+Th_clusters <- c("Th2 cells", "Th17 cells", "Th1/Th17 cells")
+Th_markers_all <- FindAllMarkers(subset(seurat_object, assay = "SCT", subset = monaco_labels %in% Th_clusters), only.pos = TRUE)
+Th_markers <- Th_markers_all %>% group_by(cluster) %>% dplyr::filter(pct.1 > 0.25) %>% dplyr::slice (1:6) %>% ungroup()
+Th_markers <- Th_markers[order(as.character(Th_markers$cluster)),c(6,7,2,3,4,1,5)] 
+
+#Narrow clusters
+Idents(seurat_object) <- 'predicted.celltype.l2'
+narrow_cluster_markers_all <- FindAllMarkers(seurat_object, assay = "SCT", only.pos = TRUE)
+narrow_cluster_markers <- narrow_cluster_markers_all %>% group_by(cluster) %>% dplyr::filter(pct.1 > 0.25) %>% dplyr::slice (1:6) %>% ungroup()
+Idents(seurat_object) <- factor(seurat_object@active.ident, sort(decreasing = TRUE, levels(seurat_object@active.ident))) #Re-order clusters alphabetically
+narrow_cluster_markers <- narrow_cluster_markers[order(as.character(narrow_cluster_markers$cluster)),c(6,7,2,3,4,1,5)] 
+
+#Sub-clusters
+subcluster_markers_all <- list()
+subcluster_markers <- list()
+mono_levels <- c("CD16 Mono 3", "CD16 Mono 2", "CD16 Mono 1", "CD14 Mono 10", "CD14 Mono 9", "CD14 Mono 8", "CD14 Mono 7", "CD14 Mono 6", "CD14 Mono 5", "CD14 Mono 4", "CD14 Mono 3", "CD14 Mono 2", "CD14 Mono 1")
+
+for(i in subcluster_cell_types){
+   Idents(seurat_list[[i]]) <- 'manual_clusters'
+   Idents(seurat_list[[i]]) <- factor(seurat_list[[i]]@active.ident, sort(decreasing = TRUE, levels(seurat_list[[i]]@active.ident))) #Re-order clusters alphabetically
+   Idents(seurat_list[["Mono"]]) <- factor(seurat_list[["Mono"]]@active.ident, levels = mono_levels)
+   subcluster_markers_all[[i]] <- FindAllMarkers(seurat_list[[i]], assay = "SCT", only.pos = TRUE)
+   subcluster_markers[[i]] <- subcluster_markers_all[[i]] %>% group_by(cluster) %>% dplyr::filter(pct.1 > 0.25, pct.2 < 0.25) %>% dplyr::slice (1:6) %>% ungroup()
+   subcluster_markers[[i]] <- subcluster_markers[[i]][order(subcluster_markers[[i]]$cluster,decreasing=TRUE),]
+}
+mono_levels <- c("CD14 Mono 1", "CD14 Mono 2", "CD14 Mono 3", "CD14 Mono 4", "CD14 Mono 5", "CD14 Mono 6", "CD14 Mono 7", "CD14 Mono 8", "CD14 Mono 9", "CD14 Mono 10", "CD16 Mono 1", "CD16 Mono 2", "CD16 Mono 3")
+subcluster_markers[["Mono"]] <- subcluster_markers[["Mono"]] %>% mutate(cluster=factor(cluster)) %>% mutate(cluster=fct_relevel(cluster, mono_levels)) %>%
+  arrange(cluster) #Re-arranging mono factor levels so "CD14 Mono 10" comes after 9
+
+subcluster_markers_joined <- rbind(subcluster_markers[["CD4_T"]], subcluster_markers[["CD8_T"]]) %>% rbind(subcluster_markers[["Mono"]])
+subcluster_markers_joined <- subcluster_markers_joined[,c(6,7,2,3,4,1,5)]
+
+#Output markers onto spreadsheet
+write.xlsx(broad_cluster_markers, "top_markers_new.xlsx", sheetName="broad")
+write.xlsx(main_cluster_markers, "top_markers_new.xlsx", sheetName="narrow", append=TRUE)
+write.xlsx(subcluster_markers_joined, "top_markers_new.xlsx", sheetName="subclusters",append=TRUE)
+write.xlsx(Th_markers, "top_markers_new.xlsx", sheetName="Th",append=TRUE)
 
 
 ##Create cluster plots ------------------------------------
